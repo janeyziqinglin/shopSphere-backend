@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-// const bcrypt = require("bcrypt.js");
+const bcrypt = require("bcryptjs");
 
 const userSchema = mongoose.Schema(
     {
@@ -43,6 +43,22 @@ const userSchema = mongoose.Schema(
       timestamps: true,
     }
   );
+
+  //encrypt/hash password
+  //before save check if pw hashed
+  //if not, return next()
+    userSchema.pre("save", async function(next){
+      // avoid re-hashing the password if it has been modified.
+      if (!this.isModified("password")){
+        return next(); //go to next middleware, similar to continue
+      }
+
+      //hash pw
+      const salt = await bcrypt.genSalt(10); //10 is length
+      const hashedPassword = await bcrypt.hash(this.password,salt);
+      this.password = hashedPassword;
+      return next(); 
+    })
 
   const User = mongoose.model("User", userSchema);
   module.exports = User;
