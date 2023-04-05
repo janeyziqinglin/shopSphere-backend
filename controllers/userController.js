@@ -6,7 +6,7 @@ const User = require("../models/userModel");
 const jwt = require("jsonwebtoken");
 
 
-// Generate Token
+// Generate Token with id
 //use token in dotenv file
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "1d" }); //toekn last for 1day
@@ -42,6 +42,14 @@ const registerUser = asyncHandler (async (req, res) => {
 
     //   Generate Token
     const token = generateToken(user._id);
+
+    //send http-only cookie 
+    res.cookie("token", token,{
+        path:"/", //cookie will be accessible from any page on the website.
+        httpOnly: true, //flags the cookie to be only used by the web server.
+        expires:new Date(Date.now()+1000 * 86400), //1 day
+        sameSite: "none", //enables cross-site cookie sharing. frontend and backend on dif URL
+    })
 
     if (user){
         const {_id,name,email,photo,phone,bio,} = user
