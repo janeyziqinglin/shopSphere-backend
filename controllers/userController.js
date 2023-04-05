@@ -131,9 +131,10 @@ const logout = asyncHandler(async (req, res) => {
   return res.status(200).json({ message: "Successfully Logged Out" });
 });
 
+
 // Get User Data
+//i.e. profile page in frontend
 const getUser = asyncHandler(async (req, res) => {
-//   res.send("test getuser");
     const user = await User.findById(req.user._id);
 
     if (user) {
@@ -152,4 +153,47 @@ const getUser = asyncHandler(async (req, res) => {
     }
 });
 
-module.exports = { registerUser, loginUser, logout, getUser };
+//get login status, return boolean
+const loginStatus = asyncHandler(async (req, res) => {
+    const token = req.cookies.token
+    if (!token){
+        return res.json(false)
+    }
+
+    //has token Verify Token
+    const verified = jwt.verify(token, process.env.JWT_SECRET);
+    if (verified){
+        return res.json(true)
+    }
+    return res.json(false)
+})
+
+//update user profile
+const updateUser = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user._id);
+
+    if (user) {
+        const { name, email, photo, phone, bio } = user;
+        user.email = email; //user can not change email
+        user.name = req.body.name || name //if user change name update it, else keep current name
+        user.phone = req.body.phone || phone
+        user.bio = req.body.bio || bio
+        user.photo = req.body.photo || photo
+
+        const updatedUser = await user.save()
+        res.status(200).json({
+            _id: updatedUser._id,
+            name: updatedUser.name,
+            email: updatedUser.email,
+            photo: updatedUser.photo,
+            phone: updatedUser.phone,
+            bio: updatedUser.bio,
+        })
+      } else {
+        res.status(404);
+        throw new Error("User Not Found");
+      }
+  });
+
+
+module.exports = { registerUser, loginUser, logout, getUser, loginStatus, updateUser};
