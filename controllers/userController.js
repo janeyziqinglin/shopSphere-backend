@@ -1,7 +1,7 @@
 // Register User
 const asyncHandler = require("express-async-handler");
 const User = require("../models/userModel");
-// const bcrypt = require("bcryptjs");
+const bcrypt = require("bcryptjs");
 // const Token = require("../models/tokenModel");
 const jwt = require("jsonwebtoken");
 
@@ -12,6 +12,7 @@ const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "1d" }); //toekn last for 1day
   };
 
+//register user
 const registerUser = asyncHandler (async (req, res) => {
     const { name, email, password } = req.body;
 
@@ -49,6 +50,7 @@ const registerUser = asyncHandler (async (req, res) => {
         httpOnly: true, //flags the cookie to be only used by the web server.
         expires:new Date(Date.now()+1000 * 86400), //1 day
         sameSite: "none", //enables cross-site cookie sharing. frontend and backend on dif URL
+        secure: true,
     })
 
     if (user){
@@ -61,6 +63,51 @@ const registerUser = asyncHandler (async (req, res) => {
         throw new Error("Invalid user data.")
     }
 
-})
+});
 
-module.exports = {registerUser};
+//login user
+const loginUser = asyncHandler(async (req, res) => {
+    const {email, password} = req.body
+
+    //validate request
+    if (!email || !password){
+        res.status(400);
+        throw new Error("Please add email and password");
+    }
+    //check if user exists
+    const user = await User.findOne({email})
+    if (!user){
+        res.status(400);
+        throw new Error("User not found, please sign up!");
+    }
+    //user exists, check if pw is correct
+    const passwordIsCorrect=await bcrypt.compare(password,user.password)
+
+
+    //   Generate Token
+    const token = generateToken(user._id);
+
+    //send http-only cookie 
+    if(passwordIsCorrect){
+        res.cookie("token", token,{
+            path:"/", //cookie will be accessible from any page on the website.
+            httpOnly: true, //flags the cookie to be only used by the web server.
+            expires:new Date(Date.now()+1000 * 86400), //1 day
+            sameSite: "none", //enables cross-site cookie sharing. frontend and backend on dif URL
+            secure: true,
+        });
+    }
+
+
+    if (user && passwordIsCorrect){
+        const {_id,name,email,photo,phone,bio,} = user
+        res.status(201).json({
+            _id,name,email,photo,phone,bio,token,
+        });
+    } else {
+        res.status(400);
+        throw new Error("Invalid email or password")
+    }
+  });
+
+module.exports = {registerUser,loginUser};
