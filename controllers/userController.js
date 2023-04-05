@@ -131,69 +131,103 @@ const logout = asyncHandler(async (req, res) => {
   return res.status(200).json({ message: "Successfully Logged Out" });
 });
 
-
 // Get User Data
 //i.e. profile page in frontend
 const getUser = asyncHandler(async (req, res) => {
-    const user = await User.findById(req.user._id);
+  const user = await User.findById(req.user._id);
 
-    if (user) {
-      const { _id, name, email, photo, phone, bio } = user;
-      res.status(200).json({
-        _id,
-        name,
-        email,
-        photo,
-        phone,
-        bio,
-      });
-    } else {
-      res.status(400);
-      throw new Error("User Not Found");
-    }
+  if (user) {
+    const { _id, name, email, photo, phone, bio } = user;
+    res.status(200).json({
+      _id,
+      name,
+      email,
+      photo,
+      phone,
+      bio,
+    });
+  } else {
+    res.status(400);
+    throw new Error("User Not Found");
+  }
 });
 
 //get login status, return boolean
 const loginStatus = asyncHandler(async (req, res) => {
-    const token = req.cookies.token
-    if (!token){
-        return res.json(false)
-    }
+  const token = req.cookies.token;
+  if (!token) {
+    return res.json(false);
+  }
 
-    //has token Verify Token
-    const verified = jwt.verify(token, process.env.JWT_SECRET);
-    if (verified){
-        return res.json(true)
-    }
-    return res.json(false)
-})
+  //has token Verify Token
+  const verified = jwt.verify(token, process.env.JWT_SECRET);
+  if (verified) {
+    return res.json(true);
+  }
+  return res.json(false);
+});
 
 //update user profile
 const updateUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+
+  if (user) {
+    const { name, email, photo, phone, bio } = user;
+    user.email = email; //user can not change email
+    user.name = req.body.name || name; //if user change name update it, else keep current name
+    user.phone = req.body.phone || phone;
+    user.bio = req.body.bio || bio;
+    user.photo = req.body.photo || photo;
+
+    const updatedUser = await user.save();
+    res.status(200).json({
+      _id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      photo: updatedUser.photo,
+      phone: updatedUser.phone,
+      bio: updatedUser.bio,
+    });
+  } else {
+    res.status(404);
+    throw new Error("User Not Found");
+  }
+});
+
+//update user profile
+const changePassword = asyncHandler(async (req, res) => {
     const user = await User.findById(req.user._id);
+    //expect two input oldPw, pw
+    const {oldPassword, password} = req.body
 
-    if (user) {
-        const { name, email, photo, phone, bio } = user;
-        user.email = email; //user can not change email
-        user.name = req.body.name || name //if user change name update it, else keep current name
-        user.phone = req.body.phone || phone
-        user.bio = req.body.bio || bio
-        user.photo = req.body.photo || photo
-
-        const updatedUser = await user.save()
-        res.status(200).json({
-            _id: updatedUser._id,
-            name: updatedUser.name,
-            email: updatedUser.email,
-            photo: updatedUser.photo,
-            phone: updatedUser.phone,
-            bio: updatedUser.bio,
-        })
-      } else {
+    if (!user){
         res.status(404);
-        throw new Error("User Not Found");
-      }
-  });
+        throw new Error("User Not Found, please sign up");
+    }
+    //validate two inputs
+    if (!oldPassword || !password){
+        res.status(404);
+        throw new Error("Please add old and new pw");
+    }
+    //check if old password matches password in DB
+    const passwordIsCorrect = await bcrypt.compare(oldPassword, user.password)
+    //if user exist and pw correct
+    if (user && passwordIsCorrect){
+        user.password = password
+        await user.save()
+        res.status(200).send("password change successful")
+    } else {
+        res.status(400);
+        throw new Error("password incorrect");
+    }
+});
 
-
-module.exports = { registerUser, loginUser, logout, getUser, loginStatus, updateUser};
+module.exports = {
+  registerUser,
+  loginUser,
+  logout,
+  getUser,
+  loginStatus,
+  updateUser,
+  changePassword,
+};
