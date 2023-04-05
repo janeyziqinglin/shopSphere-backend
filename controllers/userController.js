@@ -2,8 +2,10 @@
 const asyncHandler = require("express-async-handler");
 const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
-// const Token = require("../models/tokenModel");
+const Token = require("../models/tokenModel");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
+const sendEmail = require("../utils/sendEmail");
 
 // Generate Token with id
 //use token in dotenv file
@@ -196,30 +198,90 @@ const updateUser = asyncHandler(async (req, res) => {
 
 //update user profile
 const changePassword = asyncHandler(async (req, res) => {
-    const user = await User.findById(req.user._id);
-    //expect two input oldPw, pw
-    const {oldPassword, password} = req.body
+  const user = await User.findById(req.user._id);
+  //expect two input oldPw, pw
+  const { oldPassword, password } = req.body;
 
-    if (!user){
-        res.status(404);
-        throw new Error("User Not Found, please sign up");
-    }
-    //validate two inputs
-    if (!oldPassword || !password){
-        res.status(404);
-        throw new Error("Please add old and new pw");
-    }
-    //check if old password matches password in DB
-    const passwordIsCorrect = await bcrypt.compare(oldPassword, user.password)
-    //if user exist and pw correct
-    if (user && passwordIsCorrect){
-        user.password = password
-        await user.save()
-        res.status(200).send("password change successful")
-    } else {
-        res.status(400);
-        throw new Error("password incorrect");
-    }
+  if (!user) {
+    res.status(404);
+    throw new Error("User Not Found, please sign up");
+  }
+  //validate two inputs
+  if (!oldPassword || !password) {
+    res.status(404);
+    throw new Error("Please add old and new pw");
+  }
+  //check if old password matches password in DB
+  const passwordIsCorrect = await bcrypt.compare(oldPassword, user.password);
+  //if user exist and pw correct
+  if (user && passwordIsCorrect) {
+    user.password = password;
+    await user.save();
+    res.status(200).send("password change successful");
+  } else {
+    res.status(400);
+    throw new Error("password incorrect");
+  }
+});
+
+//update user profile
+const forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  //check if email in db
+  const user = await User.findOne({ email });
+  //if user not found, throw error
+  if (!user) {
+    res.status(404);
+    throw new Error("User Not Found.");
+  }
+
+  // Delete previous token if it exists in DB
+  let token = await Token.findOne({ userId: user._id });
+  if (token) {
+    await token.deleteOne();
+  }
+
+  //user exist, create reset token
+  let resetToken = crypto.randomBytes(32).toString("hex") + user._id;
+
+  //hash token before saving to db
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+
+  //save token to db
+  await new Token({
+    userId: user._id,
+    token: hashedToken,
+    createAt: Date.now(),
+    expiresAt: Date.now() + 30 * (60 * 1000), //expire after thirty minutes
+  }).save();
+
+  //construct reset URL
+  const resetUrl = `${process.env.FRONTEND_URL}/resetpassword/${resetToken}`;
+
+  //send reset URL to user email
+  //construct basic 4 requirement in sendEmail.js
+  const message = `
+      <h2>Hello ${user.name}</h2>
+      <p>Please use the url below to reset your password</p>  
+      <p>This reset link is valid for only 30minutes.</p>
+      <a href=${resetUrl} clicktracking=off>${resetUrl}</a>
+      <p>Regards...</p>
+      <p>shopSphere Team</p>
+    `;
+  const subject = "Password Reset Request";
+  const send_to = user.email;
+  const sent_from = process.env.EMAIL_USER;
+
+  try {
+    await sendEmail(subject, message, send_to, sent_from);
+    res.status(200).json({ success: true, message: "reset email sent" });
+  } catch (error) {
+    res.status(500);
+    throw new Error("email not sent, please try again.");
+  }
 });
 
 module.exports = {
@@ -230,4 +292,5 @@ module.exports = {
   loginStatus,
   updateUser,
   changePassword,
+  forgotPassword,
 };
