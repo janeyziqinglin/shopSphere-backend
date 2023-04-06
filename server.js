@@ -5,7 +5,7 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 // const { connect } = require("http2");
 const userRoute = require("./routes/userRoute");
-// const productRoute = require("./routes/productRoute");
+const productRoute = require("./routes/productRoute");
 // const contactRoute = require("./routes/contactRoute");
 const errorHandler = require("./middleWare/errorMiddleware");
 const cookieParser = require("cookie-parser");
@@ -25,7 +25,8 @@ app.use(cors());
 //routes middleware
 // mount the userRoute router as middleware at the /api/users endpoint
 app.use("/api/users", userRoute);
-
+//productRoute router
+app.use("/api/products", productRoute);
 //routes
 app.get("/", (req,res) => {
     res.send("home page");
