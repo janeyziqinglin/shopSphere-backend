@@ -23,7 +23,7 @@ const createProduct = asyncHandler(async (req, res) => {
   // }
 
   //handle image upload
-  let fileData = {}
+  let fileData = {};
   if (req.file) {
     // Save image to cloudinary
     let uploadedFile;
@@ -60,6 +60,29 @@ const createProduct = asyncHandler(async (req, res) => {
   res.status(201).json(product);
 });
 
+//get all products
+const getProducts = asyncHandler(async (req, res) => {
+  //user only get access to product they created
+  const products = await Product.find({ user: req.user.id }).sort("-createdAt"); //last product appear first
+  res.status(200).json(products);
+});
+
+//get single product
+const getProduct = asyncHandler(async (req, res) => {
+  const product = await Product.findById(req.params.id)
+  if (!product){
+    res.status(404);
+    throw new Error("Product not found");
+  }
+  if (product.user.toString() !== req.user.id){
+    res.status(404);
+    throw new Error("User not authorized");
+  }
+  res.status(200).json(product);
+});
+
 module.exports = {
   createProduct,
+  getProducts,
+  getProduct,
 };
