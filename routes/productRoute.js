@@ -1,13 +1,20 @@
 const express = require("express");
-const { createProduct, getProducts,getProduct } = require("../controllers/productController");
+const {
+  createProduct,
+  getProducts,
+  getProduct,
+  deleteProduct,
+  updateProduct,
+} = require("../controllers/productController");
 const router = express.Router();
 const protect = require("../middleWare/authMiddleware");
 const { upload } = require("../utils/fileUpload");
 
-
 //get all product
-router.post("/",protect, upload.single("image",createProduct));
+router.post("/", protect, upload.single("image"), createProduct);
 router.get("/", protect, getProducts);
 router.get("/:id", protect, getProduct);
+router.delete("/:id", protect, deleteProduct);
+router.patch("/:id", protect, upload.single("image"), updateProduct);
 
-module.exports = router
+module.exports = router;
