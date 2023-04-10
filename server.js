@@ -9,7 +9,7 @@ const productRoute = require("./routes/productRoute");
 // const contactRoute = require("./routes/contactRoute");
 const errorHandler = require("./middleWare/errorMiddleware");
 const cookieParser = require("cookie-parser");
-// const path = require("path");
+const path = require("path");
 
 const app = express();
 
@@ -22,6 +22,10 @@ app.use(cookieParser());
 app.use(express.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors());
+
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+
 //routes middleware
 // mount the userRoute router as middleware at the /api/users endpoint
 app.use("/api/users", userRoute);
