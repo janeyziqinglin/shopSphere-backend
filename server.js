@@ -6,7 +6,7 @@ const cors = require("cors");
 // const { connect } = require("http2");
 const userRoute = require("./routes/userRoute");
 const productRoute = require("./routes/productRoute");
-// const contactRoute = require("./routes/contactRoute");
+const contactRoute = require("./routes/contactRoute");
 const errorHandler = require("./middleWare/errorMiddleware");
 const cookieParser = require("cookie-parser");
 const path = require("path");
@@ -31,10 +31,15 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/api/users", userRoute);
 //productRoute router
 app.use("/api/products", productRoute);
+//contact router
+app.use("/api/contactus", contactRoute);
+
+
 //routes
 app.get("/", (req,res) => {
     res.send("home page");
 });
+
 
 
 // Error Middleware
