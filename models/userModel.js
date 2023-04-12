@@ -9,7 +9,7 @@ const userSchema = mongoose.Schema(
       },
       email: {
         type: String,
-        required: [true, "Please add a email"],
+        required: [true, "Please add an email"],
         unique: true,
         trim: true, //remove extra space
         //validate email, if does not pass, will return "Please enter a valid emaial"
