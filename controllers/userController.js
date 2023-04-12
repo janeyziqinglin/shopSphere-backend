@@ -224,7 +224,7 @@ const changePassword = asyncHandler(async (req, res) => {
   }
 });
 
-//update user profile
+//forgot password
 const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
   //check if email in db
@@ -278,10 +278,10 @@ const forgotPassword = asyncHandler(async (req, res) => {
 
   try {
     await sendEmail(subject, message, send_to, sent_from);
-    res.status(200).json({ success: true, message: "reset email sent" });
+    res.status(200).json({ success: true, message: "Reset email sent." });
   } catch (error) {
     res.status(500);
-    throw new Error("email not sent, please try again.");
+    throw new Error("Reset email not sent, please try again.");
   }
 });
 
