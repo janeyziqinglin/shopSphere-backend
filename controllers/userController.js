@@ -48,7 +48,7 @@ const registerUser = asyncHandler(async (req, res) => {
   //send http-only cookie
   res.cookie("token", token, {
     path: "/", //cookie will be accessible from any page on the website.
-    httpOnly: true, //flags the cookie to be only used by the web server.
+    httpOnly: false, //flags the cookie to be only used by the web server.
     expires: new Date(Date.now() + 1000 * 86400), //1 day
     sameSite: "none", //enables cross-site cookie sharing. frontend and backend on dif URL
     secure: false,
@@ -96,11 +96,12 @@ const loginUser = asyncHandler(async (req, res) => {
   if (passwordIsCorrect) {
     res.cookie("token", token, {
       path: "/", //cookie will be accessible from any page on the website.
-      httpOnly: true, //flags the cookie to be only used by the web server.
+      httpOnly: false, //flags the cookie to be only used by the web server.
       expires: new Date(Date.now() + 1000 * 86400), //1 day
       sameSite: "none", //enables cross-site cookie sharing. frontend and backend on dif URL
       secure: false,
     });
+    // console.log(`Token set to ${token}`);
   }
 
   if (user && passwordIsCorrect) {
@@ -125,7 +126,7 @@ const loginUser = asyncHandler(async (req, res) => {
 const logout = asyncHandler(async (req, res) => {
   res.cookie("token", "", {
     path: "/",
-    httpOnly: true,
+    httpOnly: false,
     expires: new Date(0), //expire the cookie
     sameSite: "none",
     secure: false,
