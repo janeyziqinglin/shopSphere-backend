@@ -10,7 +10,7 @@ const productSchema = mongoose.Schema(
     },
     name: {
       type: String,
-      required: [true, "Please add a name"],
+      required: [true, "Please add a name for the product"],
       trim: true,
     },
     sku: {
