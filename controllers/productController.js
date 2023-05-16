@@ -11,16 +11,6 @@ const createProduct = asyncHandler(async (req, res) => {
     throw new Error("Please fill in all required fileds");
   }
 
-  //handle image upload local
-  // let fileData = {};
-  // if (req.file) {
-  //   fileData = {
-  //     fileName: req.file.originalname,
-  //     filePath: req.file.path,
-  //     fileType: req.file.mimetype,
-  //     fileSize: fileSizeFormatter(req.file.size, 2),
-  //   };
-  // }
 
   //handle image upload
   let fileData = {};
