@@ -21,7 +21,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(
   cors({
-    origin: ["http://localhost:3000", "https://shop-sphere-frontend-new.vercel.app","https://shop-sphere-frontend-7fj9j64nd-janeyziqinglin.vercel.app"],
+    origin: ["http://localhost:3000", "https://shop-sphere-frontend-new-git-main-janeyziqinglin.vercel.app","https://shop-sphere-frontend-7fj9j64nd-janeyziqinglin.vercel.app"],
     credentials: true,
   })
 );
